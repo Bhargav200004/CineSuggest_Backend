@@ -19,10 +19,11 @@ def create_movie(movie: schemas.MovieCreate, db : Session = Depends(get_db)):
     return new_movie
 
 @router.get("/", response_model=List[schemas.Movie])
-def get_all_movies(db : Session = Depends(get_db)):
-    movies = db.query(models.Movie).all()
+def get_all_movies(db : Session = Depends(get_db) , skip: int = 0, limit : int  = 100):
+    movies = db.query(models.Movie).offset(skip).limit(limit=limit).all()
     return movies
 
 @router.get("/trending" , response_model=List[schemas.Movie])
 def get_trending_movies(db: Session = Depends(get_db)):
     trending_movies = db.query(models.Movie).order_by(func.random()).limit(10).all()
+    return trending_movies
