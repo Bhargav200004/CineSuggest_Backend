@@ -1,9 +1,12 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class MovieBase(BaseModel):
     title: str
     genre: str
+    overview: Optional[str] = None
+    release_date: Optional[str] = None
+    poster_path: Optional[str] = None
 
 class MovieCreate(MovieBase):
     pass

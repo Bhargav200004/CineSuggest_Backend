@@ -19,6 +19,10 @@ class Movie(Base):
     title = Column(String, index=True)
     genre = Column(String)
 
+    overview = Column(String)
+    release_date = Column(String)
+    poster_path = Column(String) 
+
     ratings = relationship("Rating" , back_populates="movie")
     favorites = relationship("Favorite" , back_populates="movie")
 
