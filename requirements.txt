@@ -4,3 +4,5 @@ SQLAlchemy
 pydantic
 scikit-surprise
 pandas
+psycopg2-binary
+aiohttp
