@@ -22,6 +22,9 @@ class Movie(Base):
     overview = Column(String)
     release_date = Column(String)
     poster_path = Column(String) 
+    revenue = Column(Integer)
+    runtime = Column(String)
+    original_language = Column(String)
 
     ratings = relationship("Rating" , back_populates="movie")
     favorites = relationship("Favorite" , back_populates="movie")

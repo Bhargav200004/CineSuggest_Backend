@@ -23,6 +23,12 @@ def get_all_movies(db : Session = Depends(get_db) , skip: int = 0, limit : int  
     movies = db.query(models.Movie).offset(skip).limit(limit=limit).all()
     return movies
 
+@router.get("/{movie_id}", response_model=schemas.Movie)
+def get_movie_by_id(movie_id ,  db: Session = Depends(get_db)):
+    movie = db.query(models.Movie).get(movie_id)
+    return movie
+
+
 @router.get("/trending" , response_model=List[schemas.Movie])
 def get_trending_movies(db: Session = Depends(get_db)):
     trending_movies = db.query(models.Movie).order_by(func.random()).limit(10).all()

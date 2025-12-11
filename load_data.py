@@ -6,6 +6,7 @@ import logging
 import re
 import asyncio
 import aiohttp
+from datetime import datetime
 
 # --- Configuration ---
 METADATA_CSV = "movies_metadata.csv"
@@ -58,6 +59,7 @@ async def fetch_all_posters(imdb_ids):
 
 # ---------- MAIN LOAD FUNCTION ----------
 def load_data():
+    start_time = datetime.now()
     log.info("Dropping and re-creating database tables...")
     models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
@@ -75,7 +77,7 @@ def load_data():
         log.info(f"Fetching posters for {len(imdb_ids)} movies asynchronously...")
 
         # Fetch all posters concurrently
-        posters = asyncio.run(fetch_all_posters(imdb_ids))
+        posters =  asyncio.run(fetch_all_posters(imdb_ids))
         log.info("Poster fetching complete.")
 
         movies_to_add = []
@@ -109,6 +111,9 @@ def load_data():
                 "genre": genre_string,
                 "overview": row.get("overview"),
                 "release_date": row.get("release_date"),
+                "revenue" : row.get("revenue"),
+                "runtime" : row.get("runtime"),
+                "original_language" : row.get("original_language"),
                 "poster_path": poster_url,
                 "_kaggle_id": kaggle_id,
             }
@@ -172,6 +177,10 @@ def load_data():
         log.info(f"Users:   {total_users}")
         log.info(f"Ratings: {total_ratings}")
         log.info("---" * 10)
+
+        time_taken = datetime.now() - start_time
+
+        log.info(f"Time taken == {time_taken}")
 
     except Exception as e:
         log.error(f"Error occurred: {e}")

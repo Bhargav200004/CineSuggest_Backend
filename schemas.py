@@ -5,6 +5,9 @@ class MovieBase(BaseModel):
     title: str
     genre: str
     overview: Optional[str] = None
+    revenue: Optional[int] = 0
+    runtime: str
+    original_language : str
     release_date: Optional[str] = None
     poster_path: Optional[str] = None
 
