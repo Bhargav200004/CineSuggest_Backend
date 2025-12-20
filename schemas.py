@@ -11,6 +11,9 @@ class MovieBase(BaseModel):
     release_date: Optional[str] = None
     poster_path: Optional[str] = None
 
+    user_rating: int = 0
+    is_favorite: bool = False
+
 class MovieCreate(MovieBase):
     pass
 

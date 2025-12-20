@@ -85,5 +85,3 @@ def get_recommendations_for_user(user_id: int, db: Session = Depends(get_db)):
     sorted_top_movies = [movie_map[movie_id] for movie_id in top_10_movie_ids if movie_id in movie_map]
 
     return {"recommendations" : sorted_top_movies}
-
-
