@@ -152,4 +152,13 @@ cython_debug/
 
 __pycache__/
 
+movies_metadata.csv
+ratings_small.csv
+
+movies.db
+*.db
+
+Dockerfile
+.dockerignore
+
 # End of https://mrkandreev.name/snippets/gitignore-generator/#venv,Python

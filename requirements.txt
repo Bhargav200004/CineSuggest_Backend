@@ -4,5 +4,11 @@ SQLAlchemy
 pydantic
 scikit-surprise
 pandas
+numpy<2
 psycopg2-binary
 aiohttp
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+python-dotenv
+email-validator

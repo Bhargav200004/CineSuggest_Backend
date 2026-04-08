@@ -1,18 +1,28 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
 
-# Define the SQLite database URL.
-# This will create a file named 'movies.db' in the same directory.
+# Load environment variables from .env file
+load_dotenv()
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./movies.db"
+# Get database URL from environment variable
+# Defaults to SQLite if not set
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./movies.db")
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread" : False}
-)
 
-SessionLocal = sessionmaker(autocommit = False, autoflush= False, bind = engine)
+# Create engine with appropriate connection arguments
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False}
+    )
+else:
+    # For PostgreSQL/other databases
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
