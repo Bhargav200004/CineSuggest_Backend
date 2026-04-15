@@ -184,7 +184,7 @@ def load_data():
             RETURNING id
         """)
         
-        BATCH_COMMIT_SIZE = 5000  # Commit every 5000 to avoid Supabase timeout
+        BATCH_COMMIT_SIZE = 1000  # Commit every 5000 to avoid Supabase timeout
         inserted_movies = []
         
         for batch_start in range(0, len(movies_to_add), BATCH_COMMIT_SIZE):

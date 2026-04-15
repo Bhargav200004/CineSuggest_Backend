@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import models
@@ -6,6 +6,7 @@ import schemas
 from database import get_db
 from sqlalchemy.sql.expression import func
 from auth import get_current_user
+from exceptions import NotFoundException
 
 router = APIRouter(
     prefix="/movies",
@@ -138,7 +139,7 @@ def get_movie_by_id(
     movie = db.query(models.Movie).filter(models.Movie.id == movie_id).first()
 
     if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise NotFoundException(resource="Movie", identifier=str(movie_id))
     
     user_rating = 0
     is_fav = False

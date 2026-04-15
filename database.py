@@ -20,7 +20,10 @@ if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     )
 else:
     # For PostgreSQL/other databases
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"options": "-c statement_timeout=60000"}
+        )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -1,7 +1,7 @@
 """
 Authentication router for user registration and login.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -18,6 +18,7 @@ from auth import (
     REFRESH_TOKEN_EXPIRE_DAYS,
     get_current_user
 )
+from exceptions import ConflictException, UnauthorizedException, NotFoundException
 
 router = APIRouter(
     prefix="/auth",
@@ -38,19 +39,13 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Check if username already exists
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
-        )
+        raise ConflictException(resource="Username", message="Username already registered")
     
     # Check if email already exists (if provided)
     if user.email:
         db_email = db.query(models.User).filter(models.User.email == user.email).first()
         if db_email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
+            raise ConflictException(resource="Email", message="Email already registered")
     
     # Create new user with hashed password
     hashed_password = get_password_hash(user.password)
@@ -83,11 +78,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise UnauthorizedException(message="Incorrect username or password")
     
     # Create access and refresh tokens
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -143,20 +134,12 @@ def refresh_access_token(token_data: schemas.TokenRefresh, db: Session = Depends
     username = verify_refresh_token(token_data.refresh_token)
     
     if username is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise UnauthorizedException(message="Invalid or expired refresh token")
     
     # Verify user still exists
     user = db.query(models.User).filter(models.User.username == username).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise NotFoundException(resource="User")
     
     # Create new tokens
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

@@ -20,6 +20,7 @@ A production-ready FastAPI backend for a movie recommendation system with JWT au
 - ✅ **Optimized Data Loading** - Batch processing for fast Supabase imports
 - ✅ **CORS Enabled** - Ready for frontend integration
 - ✅ **Auto-generated Docs** - Interactive API documentation
+- ✅ **Global Error Handling** - Comprehensive error handling with standardized responses
 
 ---
 
@@ -29,6 +30,7 @@ A production-ready FastAPI backend for a movie recommendation system with JWT au
 - [Database Setup](#-database-setup)
 - [Loading Data to Supabase](#-loading-data-to-supabase)
 - [Authentication with Refresh Tokens](#-authentication)
+- [Global Error Handling](#-global-error-handling)
 - [API Endpoints](#-api-endpoints)
 - [API Response Examples](#-api-response-examples)
 - [Storage Optimization](#-storage-optimization)
@@ -471,6 +473,232 @@ async function makeAuthenticatedRequest(endpoint) {
   });
 }
 ```
+
+---
+
+## 🛡️ Global Error Handling
+
+The API implements **comprehensive global error handling** to ensure no error crashes the application. All errors are caught and returned with a standardized JSON response format.
+
+### Error Response Format
+
+All errors follow this consistent structure:
+
+```json
+{
+  "success": false,
+  "error": {
+    "type": "NotFoundException",
+    "message": "Movie not found: 99999",
+    "status_code": 404,
+    "timestamp": "2024-01-15T10:30:45.123456Z",
+    "path": "/movies/99999"
+  }
+}
+```
+
+### Error Types
+
+The API handles all error types gracefully:
+
+| Error Type | Status Code | Description |
+|------------|-------------|-------------|
+| `ValidationError` | 422 | Request validation failed (invalid input data) |
+| `NotFoundException` | 404 | Requested resource not found |
+| `UnauthorizedException` | 401 | Authentication failed or token invalid |
+| `ForbiddenException` | 403 | Access forbidden (insufficient permissions) |
+| `ConflictException` | 409 | Resource already exists (e.g., duplicate username) |
+| `BadRequestException` | 400 | Invalid request format or parameters |
+| `DatabaseError` | 500 | Database operation failed |
+| `InternalServerError` | 500 | Unexpected server error |
+
+### Error Handling Examples
+
+#### 1. Validation Error (422)
+
+When you send invalid data:
+
+```bash
+curl -X POST "http://localhost:8000/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user", "password": "123"}'
+```
+
+**Response**:
+```json
+{
+  "success": false,
+  "error": {
+    "type": "ValidationError",
+    "message": "Request validation failed",
+    "status_code": 422,
+    "timestamp": "2024-01-15T10:30:45.123456Z",
+    "path": "/auth/register",
+    "details": {
+      "validation_errors": [
+        {
+          "field": "body -> password",
+          "message": "ensure this value has at least 6 characters",
+          "type": "value_error.any_str.min_length"
+        }
+      ]
+    }
+  }
+}
+```
+
+#### 2. Not Found Error (404)
+
+When requesting a non-existent resource:
+
+```bash
+curl "http://localhost:8000/movies/999999"
+```
+
+**Response**:
+```json
+{
+  "success": false,
+  "error": {
+    "type": "NotFoundException",
+    "message": "Movie not found: 999999",
+    "status_code": 404,
+    "timestamp": "2024-01-15T10:30:45.123456Z",
+    "path": "/movies/999999"
+  }
+}
+```
+
+#### 3. Unauthorized Error (401)
+
+When using invalid or expired token:
+
+```bash
+curl -X GET "http://localhost:8000/auth/me" \
+  -H "Authorization: Bearer invalid_token"
+```
+
+**Response**:
+```json
+{
+  "success": false,
+  "error": {
+    "type": "UnauthorizedException",
+    "message": "Could not validate credentials",
+    "status_code": 401,
+    "timestamp": "2024-01-15T10:30:45.123456Z",
+    "path": "/auth/me"
+  }
+}
+```
+
+#### 4. Conflict Error (409)
+
+When trying to register with an existing username:
+
+```bash
+curl -X POST "http://localhost:8000/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "existing_user",
+    "password": "password123"
+  }'
+```
+
+**Response**:
+```json
+{
+  "success": false,
+  "error": {
+    "type": "ConflictException",
+    "message": "Username already registered",
+    "status_code": 409,
+    "timestamp": "2024-01-15T10:30:45.123456Z",
+    "path": "/auth/register"
+  }
+}
+```
+
+#### 5. Database Error (500)
+
+When a database operation fails:
+
+```json
+{
+  "success": false,
+  "error": {
+    "type": "DatabaseError",
+    "message": "Database integrity constraint violated",
+    "status_code": 500,
+    "timestamp": "2024-01-15T10:30:45.123456Z",
+    "path": "/interactions/ratings"
+  }
+}
+```
+
+### Error Handling Implementation
+
+The error handling system consists of:
+
+1. **Custom Exception Classes** (`exceptions.py`):
+   - Base `MovieAPIException` class
+   - Specific exception types for different error scenarios
+   - Consistent error attributes (message, status_code, details)
+
+2. **Global Error Handlers** (`error_handlers.py`):
+   - Catches ALL exceptions (FastAPI, SQLAlchemy, Pydantic, Python)
+   - Standardizes error response format
+   - Logs errors with full stack traces for debugging
+   - Prevents application crashes
+
+3. **Automatic Registration** (`main.py`):
+   - All handlers registered on application startup
+   - No endpoint can fail without being caught
+
+### Client-Side Error Handling
+
+Frontend applications should check the `success` field:
+
+```javascript
+async function makeRequest(endpoint) {
+  const response = await fetch(endpoint);
+  const data = await response.json();
+  
+  if (!data.success) {
+    // Handle error
+    console.error(`Error ${data.error.status_code}: ${data.error.message}`);
+    
+    // Show user-friendly message based on error type
+    switch(data.error.type) {
+      case 'ValidationError':
+        showValidationErrors(data.error.details.validation_errors);
+        break;
+      case 'UnauthorizedException':
+        redirectToLogin();
+        break;
+      case 'NotFoundException':
+        show404Page();
+        break;
+      default:
+        showGenericError(data.error.message);
+    }
+    return null;
+  }
+  
+  // Success - process data
+  return data;
+}
+```
+
+### Logging
+
+All errors are automatically logged with:
+- ✅ Full stack traces for debugging
+- ✅ Request path and method
+- ✅ Error type and message
+- ✅ Timestamp for audit trails
+
+Check application logs for detailed error information in production.
 
 ---
 

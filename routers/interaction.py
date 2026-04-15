@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 import models
 import schemas
 from database import get_db
 from auth import get_current_user
+from exceptions import NotFoundException, ConflictException
 
 router = APIRouter(
     prefix="/interactions",
@@ -26,7 +27,7 @@ def add_or_update_rating(
     # Check if movie exists
     db_movie = db.query(models.Movie).filter(models.Movie.id == rating.movie_id).first()
     if not db_movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise NotFoundException(resource="Movie", identifier=str(rating.movie_id))
     
     # Check for existing rating
     db_rating = db.query(models.Rating).filter(
@@ -66,7 +67,7 @@ def delete_rating(
     ).first()
     
     if not db_rating:
-        raise HTTPException(status_code=404, detail="Rating not found")
+        raise NotFoundException(resource="Rating")
     
     db.delete(db_rating)
     db.commit()
@@ -87,7 +88,7 @@ def add_favorite(
     # Check if movie exists
     db_movie = db.query(models.Movie).filter(models.Movie.id == favorite.movie_id).first()
     if not db_movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
+        raise NotFoundException(resource="Movie", identifier=str(favorite.movie_id))
     
     # Check if already favorited
     db_favorite = db.query(models.Favorite).filter(
@@ -96,7 +97,7 @@ def add_favorite(
     ).first()
 
     if db_favorite:
-        raise HTTPException(status_code=400, detail="Movie already in favorites")
+        raise ConflictException(resource="Favorite", message="Movie already in favorites")
     
     # Add to favorites
     new_favorite = models.Favorite(
@@ -124,7 +125,7 @@ def remove_favorite(
     ).first()
 
     if not db_favorite:
-        raise HTTPException(status_code=404, detail="Favorite not found")
+        raise NotFoundException(resource="Favorite")
     
     db.delete(db_favorite)
     db.commit()

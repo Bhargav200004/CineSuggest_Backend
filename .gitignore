@@ -161,4 +161,10 @@ movies.db
 Dockerfile
 .dockerignore
 
+movies_metadata.csv
+ratings_small.csv
+movies.db
+*.db
+
+
 # End of https://mrkandreev.name/snippets/gitignore-generator/#venv,Python

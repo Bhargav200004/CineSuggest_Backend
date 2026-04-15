@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 import pandas as pd
 from surprise import Dataset, Reader, SVD
@@ -6,6 +6,7 @@ from surprise.model_selection import train_test_split
 import models, schemas
 from database import get_db
 from typing import List
+from exceptions import NotFoundException
 
 router = APIRouter(
     prefix="/recommend",
@@ -48,7 +49,7 @@ def get_recommendations_for_user(user_id: int, db: Session = Depends(get_db)):
 
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, details="User not found")
+        raise NotFoundException(resource="User", identifier=str(user_id))
     
     model, trainset = get_recommendation_model(db)
 

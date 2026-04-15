@@ -3,7 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 import models
 from routers import user, movie, interaction, recommend, genre, auth
+from error_handlers import register_error_handlers
+import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -19,6 +27,10 @@ app = FastAPI(
         "name": "MIT",
     }
 )
+
+# Register global error handlers
+register_error_handlers(app)
+logger.info("Global error handlers registered")
 
 # CORS middleware for frontend access
 app.add_middleware(
@@ -44,6 +56,7 @@ def read_root():
     Welcome endpoint with API information.
     """
     return {
+        "success": True,
         "message": "Welcome to the Movie Recommendation API",
         "version": "2.0.0",
         "docs": "/docs",
@@ -56,6 +69,10 @@ def health_check():
     """
     Health check endpoint for monitoring.
     """
-    return {"status": "healthy", "service": "movie-recommendation-api"}
+    return {
+        "success": True,
+        "status": "healthy",
+        "service": "movie-recommendation-api"
+    }
 
 
