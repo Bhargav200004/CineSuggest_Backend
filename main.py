@@ -1,3 +1,11 @@
+import os
+
+# 1. Redirect surprise's dataset folder to the writable /tmp directory
+os.environ['SURPRISE_DATA_FOLDER'] = '/tmp/surprise_data'
+
+# 2. Suppress the joblib shared memory warning (forces serial mode)
+os.environ['JOBLIB_MULTIPROCESSING'] = '0'
+
 from fastapi import FastAPI
 from database import engine
 import models
