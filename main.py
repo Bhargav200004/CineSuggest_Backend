@@ -11,15 +11,6 @@ from database import engine
 import models
 from routers import user, movie, interaction, recommend , genre
 
-# Add BOTH your local development URL and your future production frontend URL
-origins = [
-    "http://localhost:5173",  # Your local Vite frontend
-    "http://127.0.0.1:5173",  # Alternative local loopback
-    "https://your-frontend-domain.vercel.app", # Your deployed frontend
-]
-
-
-
 
 models.Base.metadata.create_all(bind = engine)
 
@@ -27,14 +18,6 @@ app = FastAPI(
     title="Movie Recommendation API",
     description="A simple backend for an Android movie recommendation app.",
     version="1.0.0"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 app.include_router(user.router)
